@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package blog_user;
+
+import "dto.proto";
+import "common.proto";
+
+option java_multiple_files = true;
+option java_package = "com.samithiwat.user.grpc.bloguser";
+option java_outer_classname = "BlogUser";
+
+service BlogUserService{
+  rpc findAll(FindAllUserRequest) returns (BlogUserPaginationResponse) {}
+  rpc findOne(FindOneUserRequest) returns (BlogUserResponse) {}
+  rpc create(CreateUserRequest) returns (BlogUserResponse) {}
+  rpc update(UpdateUserRequest) returns (BlogUserResponse) {}
+  rpc delete(DeleteUserRequest) returns (BlogUserResponse) {}
+}
+
+message BlogUserResponse {
+  int32 StatusCode = 1;
+  repeated string errors = 2;
+  dto.BlogUser data = 3;
+}
+
+message BlogUserListResponse {
+  int32 StatusCode = 1;
+  repeated string errors = 2;
+  repeated dto.BlogUser data = 3;
+}
+
+message BlogUserPagination{
+  repeated dto.BlogUser items = 1;
+  common.PaginationMetadata meta = 2;
+}
+
+message BlogUserPaginationResponse{
+  int32 StatusCode = 1;
+  repeated string errors = 2;
+  BlogUserPagination data = 3;
+}
+
+// findAll
+
+message FindAllUserRequest{
+  int64 limit = 1;
+  int64 page = 2;
+}
+
+
+// findOne
+
+message FindOneUserRequest{
+  uint32 id = 1;
+}
+
+// create
+
+message CreateUserRequest{
+  uint32 userId = 1;
+  string description = 2;
+}
+
+// update
+
+message UpdateUserRequest{
+  uint32 id = 1;
+  uint32 userId = 2;
+  string description = 3;
+}
+
+// delete
+
+message DeleteUserRequest{
+  uint32 id = 1;
+}
