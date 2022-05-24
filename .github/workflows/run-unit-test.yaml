@@ -1,0 +1,19 @@
+name: 'Pull request: Run unit test'
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+#      - name: Download dependencies
+#        run: ./mvnw clean install
+
+      - name: Test
+        run: ./mvnw test
