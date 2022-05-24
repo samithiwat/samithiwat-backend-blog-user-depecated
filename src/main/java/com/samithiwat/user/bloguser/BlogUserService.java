@@ -3,6 +3,7 @@ package com.samithiwat.user.bloguser;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
+import com.samithiwat.user.user.UserService;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,16 @@ import java.util.Optional;
 public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase {
     @Autowired
     private BlogUserRepository repository;
+
+    @Autowired
+    private UserService userService;
+
+    public BlogUserService() {}
+
+    public BlogUserService(BlogUserRepository blogUserRepository, UserService userService) {
+        this.repository = blogUserRepository;
+        this.userService = userService;
+    }
 
     @Override
     public void findAll(FindAllUserRequest request, StreamObserver<BlogUserPaginationResponse> responseObserver) {
@@ -27,7 +38,7 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
         Optional<User> query = this.repository.findById(Long.valueOf(request.getId()));
         if(query.isEmpty()){
             res.setStatusCode(HttpStatus.NOT_FOUND.value())
-                    .setErrors(0,"Not found user");
+                    .addErrors("Not found user");
 
             responseObserver.onNext(res.build());
             responseObserver.onCompleted();
@@ -35,9 +46,23 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
         }
 
         User user = query.get();
+        com.samithiwat.user.grpc.dto.User userDto = this.userService.findOne(user.getUserId());
+
+        if(userDto == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Invalid user data");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
         BlogUser result = BlogUser.newBuilder()
                 .setId(Math.toIntExact(user.getId()))
-                .setUserId(Math.toIntExact(user.getUserId()))
+                .setFirstname(userDto.getFirstname())
+                .setLastname(userDto.getLastname())
+                .setDisplayName(userDto.getDisplayName())
+                .setImageUrl(userDto.getImageUrl())
                 .setDescription(user.getDescription())
                 .build();
 
