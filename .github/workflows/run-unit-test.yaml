@@ -12,6 +12,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
 #      - name: Download dependencies
 #        run: ./mvnw clean install
 
