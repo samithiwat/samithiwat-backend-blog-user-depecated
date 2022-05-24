@@ -1,6 +1,7 @@
 package com.samithiwat.user.user;
 
 import com.github.javafaker.Faker;
+import com.samithiwat.user.TestConfig;
 import com.samithiwat.user.grpc.dto.User;
 import io.grpc.ManagedChannel;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -25,20 +26,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest(properties = {
-        "grpc.server.inProcessName=test", // Enable inProcess server
+        "grpc.server.inProcessName=test-user", // Enable inProcess server
         "grpc.server.port=-1", // Disable external server
         "grpc.client.userService.address=in-process:test" // Configure the client to connect to the inProcess server
 })
-@SpringJUnitConfig(classes = {UserServiceTestConfig.class})
+@SpringJUnitConfig(classes = {TestConfig.class})
 @DirtiesContext
 @ExtendWith(SpringExtension.class)
 public class UserServiceTest {
     @Rule
     public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
-    private UserService userService;
-
-    private UserServiceGrpc.UserServiceBlockingStub userBlockingStub;
     private List<User> users;
     private User user;
     private Faker faker;
@@ -97,10 +95,10 @@ public class UserServiceTest {
         }
 
         ManagedChannel chan = grpcCleanup.register(InProcessChannelBuilder.forName("user-service-test-findOne-success").directExecutor().build());
-        this.userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
-        this.userService = new UserService(this.userBlockingStub);
+        UserServiceGrpc.UserServiceBlockingStub userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
+        UserService service = new UserService(userBlockingStub);
 
-        Assertions.assertEquals(this.user, this.userService.findOne(1l));
+        Assertions.assertEquals(this.user,service.findOne(1l));
     }
 
     @Test
@@ -126,9 +124,9 @@ public class UserServiceTest {
         }
 
         ManagedChannel chan = grpcCleanup.register(InProcessChannelBuilder.forName("user-service-test-findOne-failed").directExecutor().build());
-        this.userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
-        this.userService = new UserService(this.userBlockingStub);
+        UserServiceGrpc.UserServiceBlockingStub userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
+        UserService service = new UserService(userBlockingStub);
 
-        Assertions.assertEquals(null, this.userService.findOne(1l));
+        Assertions.assertEquals(null,service.findOne(1l));
     }
 }
