@@ -3,14 +3,12 @@ package com.samithiwat.user.bloguser;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
-import com.samithiwat.user.user.UserService;
+import com.samithiwat.user.user.UserServiceImpl;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
-
-import java.util.Optional;
 
 @GrpcService
 public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase {
@@ -18,11 +16,11 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
     private BlogUserRepository repository;
 
     @Autowired
-    private UserService userService;
+    private UserServiceImpl userService;
 
     public BlogUserService() {}
 
-    public BlogUserService(BlogUserRepository blogUserRepository, UserService userService) {
+    public BlogUserService(BlogUserRepository blogUserRepository, UserServiceImpl userService) {
         this.repository = blogUserRepository;
         this.userService = userService;
     }
