@@ -5,6 +5,8 @@ on:
     branches:
       - dev
       - master
+env:
+  SPRING_PROFILES_ACTIVE: ci
 
 jobs:
   build:
