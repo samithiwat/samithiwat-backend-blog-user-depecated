@@ -96,7 +96,7 @@ public class UserServiceTest {
 
         ManagedChannel chan = grpcCleanup.register(InProcessChannelBuilder.forName("user-service-test-findOne-success").directExecutor().build());
         UserServiceGrpc.UserServiceBlockingStub userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
-        UserService service = new UserService(userBlockingStub);
+        UserServiceImpl service = new UserServiceImpl(userBlockingStub);
 
         Assertions.assertEquals(this.user,service.findOne(1l));
     }
@@ -125,7 +125,7 @@ public class UserServiceTest {
 
         ManagedChannel chan = grpcCleanup.register(InProcessChannelBuilder.forName("user-service-test-findOne-failed").directExecutor().build());
         UserServiceGrpc.UserServiceBlockingStub userBlockingStub = UserServiceGrpc.newBlockingStub(chan);
-        UserService service = new UserService(userBlockingStub);
+        UserServiceImpl service = new UserServiceImpl(userBlockingStub);
 
         Assertions.assertEquals(null,service.findOne(1l));
     }

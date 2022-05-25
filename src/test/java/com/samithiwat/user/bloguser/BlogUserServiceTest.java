@@ -5,7 +5,7 @@ import com.samithiwat.user.TestConfig;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
-import com.samithiwat.user.user.UserService;
+import com.samithiwat.user.user.UserServiceImpl;
 import io.grpc.internal.testing.StreamRecorder;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @ExtendWith(SpringExtension.class)
 public class BlogUserServiceTest {
     @Spy
-    private UserService userService;
+    private UserServiceImpl userService;
 
     @Spy
     private BlogUserRepository repository;
