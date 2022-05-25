@@ -35,8 +35,8 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
     public void findOne(FindOneUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
         BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
 
-        Optional<User> query = this.repository.findById(Long.valueOf(request.getId()));
-        if(query.isEmpty()){
+        User user = this.repository.findById(Long.valueOf(request.getId())).orElse(null);
+        if(user == null){
             res.setStatusCode(HttpStatus.NOT_FOUND.value())
                     .addErrors("Not found user");
 
@@ -45,7 +45,6 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
             return;
         }
 
-        User user = query.get();
         com.samithiwat.user.grpc.dto.User userDto = this.userService.findOne(user.getUserId());
 
         if(userDto == null){
@@ -80,7 +79,33 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void update(UpdateUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
-        super.update(request, responseObserver);
+        BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
+
+
+        User user = this.repository.findById(Long.valueOf(request.getId())).map(u -> {
+            u.setDescription(request.getDescription());
+            return this.repository.save(u);
+        }).orElse(null);
+
+        if(user == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        BlogUser result = BlogUser.newBuilder()
+                .setId(Math.toIntExact(user.getId()))
+                .setDescription(user.getDescription())
+                .build();
+
+        res.setStatusCode(HttpStatus.OK.value())
+                .setData(result);
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
     }
 
     @Override
