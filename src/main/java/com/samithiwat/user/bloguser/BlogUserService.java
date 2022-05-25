@@ -27,11 +27,6 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
     }
 
     @Override
-    public void findAll(FindAllUserRequest request, StreamObserver<BlogUserPaginationResponse> responseObserver) {
-        super.findAll(request, responseObserver);
-    }
-
-    @Override
     public void findOne(FindOneUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
         BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
 
@@ -74,13 +69,44 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void create(CreateUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
-        super.create(request, responseObserver);
+        BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
+
+        com.samithiwat.user.grpc.dto.User userDto = this.userService.findOne((long) request.getUserId());
+
+        if(userDto == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        User dto = new User();
+        dto.setUserId((long) request.getUserId());
+        dto.setDescription(request.getDescription());
+
+        User user = this.repository.save(dto);
+
+        BlogUser result = BlogUser.newBuilder()
+                .setId(Math.toIntExact(user.getId()))
+                .setFirstname(userDto.getFirstname())
+                .setLastname(userDto.getLastname())
+                .setDisplayName(userDto.getDisplayName())
+                .setImageUrl(userDto.getImageUrl())
+                .setDescription(user.getDescription())
+                .build();
+
+        res.setStatusCode(HttpStatus.CREATED.value())
+                .setData(result);
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
     }
 
     @Override
     public void update(UpdateUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
         BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
-
 
         User user = this.repository.findById(Long.valueOf(request.getId())).map(u -> {
             u.setDescription(request.getDescription());

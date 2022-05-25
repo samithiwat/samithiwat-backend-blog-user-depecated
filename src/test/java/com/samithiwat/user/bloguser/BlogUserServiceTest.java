@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.samithiwat.user.TestConfig;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.BlogUserResponse;
+import com.samithiwat.user.grpc.bloguser.CreateUserRequest;
 import com.samithiwat.user.grpc.bloguser.FindOneUserRequest;
 import com.samithiwat.user.grpc.bloguser.UpdateUserRequest;
 import com.samithiwat.user.grpc.dto.BlogUser;
@@ -160,6 +161,68 @@ public class BlogUserServiceTest {
         StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
 
         service.findOne(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BlogUserResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BlogUserResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
+        Assertions.assertEquals(1, result.getErrorsCount());
+        Assertions.assertEquals(BlogUser.newBuilder().build(), result.getData());
+    }
+
+    @Test
+    public void testCreateSuccess() throws Exception {
+        Mockito.doReturn(this.userDto).when(this.userService).findOne(1l);
+        Mockito.doReturn(user.get()).when(this.repository).save(Mockito.any());
+
+        BlogUserService service = new BlogUserService(this.repository, this.userService);
+
+        CreateUserRequest req = CreateUserRequest.newBuilder()
+                .setUserId(Math.toIntExact(user.get().getUserId()))
+                .setDescription(user.get().getDescription())
+                .build();
+
+        StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
+
+        service.create(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BlogUserResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BlogUserResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.CREATED.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertEquals(this.blogUserDto, result.getData());
+    }
+
+    @Test
+    public void testCreateUserNotFound() throws Exception {
+        Mockito.doReturn(null).when(this.userService).findOne(1l);
+        Mockito.doReturn(user.get()).when(this.repository).save(user.get());
+
+        BlogUserService service = new BlogUserService(this.repository, this.userService);
+
+        UpdateUserRequest req = UpdateUserRequest.newBuilder()
+                .setId(1)
+                .setDescription(user.get().getDescription())
+                .build();
+
+        StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
+
+        service.update(req, res);
 
         if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
             Assertions.fail();
