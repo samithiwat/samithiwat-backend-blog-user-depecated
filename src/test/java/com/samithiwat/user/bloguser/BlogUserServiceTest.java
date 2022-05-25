@@ -3,10 +3,7 @@ package com.samithiwat.user.bloguser;
 import com.github.javafaker.Faker;
 import com.samithiwat.user.TestConfig;
 import com.samithiwat.user.bloguser.entity.User;
-import com.samithiwat.user.grpc.bloguser.BlogUserResponse;
-import com.samithiwat.user.grpc.bloguser.CreateUserRequest;
-import com.samithiwat.user.grpc.bloguser.FindOneUserRequest;
-import com.samithiwat.user.grpc.bloguser.UpdateUserRequest;
+import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
 import com.samithiwat.user.user.UserService;
 import io.grpc.internal.testing.StreamRecorder;
@@ -17,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -290,6 +288,63 @@ public class BlogUserServiceTest {
         StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
 
         service.update(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BlogUserResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BlogUserResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
+        Assertions.assertEquals(1, result.getErrorsCount());
+        Assertions.assertEquals(BlogUser.newBuilder().build(), result.getData());
+    }
+
+    @Test
+    public void testDeleteSuccess() throws Exception {
+        Mockito.doNothing().when(this.repository).deleteById(1l);
+        BlogUserService service = new BlogUserService(this.repository, this.userService);
+
+        DeleteUserRequest req = DeleteUserRequest.newBuilder()
+                .setId(1)
+                .build();
+
+        StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
+
+        service.delete(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BlogUserResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BlogUserResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NO_CONTENT.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertEquals(BlogUser.newBuilder().build(), result.getData());
+    }
+
+    @Test
+    public void testDeleteNotFound() throws Exception {
+        Mockito.doThrow(new EmptyResultDataAccessException("Not found user", 1)).when(this.repository).deleteById(1l);
+
+        BlogUserService service = new BlogUserService(this.repository, this.userService);
+
+        DeleteUserRequest req = DeleteUserRequest.newBuilder()
+                .setId(1)
+                .build();
+
+        StreamRecorder<BlogUserResponse> res = StreamRecorder.create();
+
+        service.delete(req, res);
 
         if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
             Assertions.fail();

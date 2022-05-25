@@ -7,6 +7,7 @@ import com.samithiwat.user.user.UserService;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
@@ -136,6 +137,21 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void delete(DeleteUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
-        super.delete(request, responseObserver);
+        BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
+
+        try{
+            this.repository.deleteById((long) request.getId());
+            res.setStatusCode(HttpStatus.NO_CONTENT.value())
+                    .setData(BlogUser.newBuilder().build());
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+        }catch(EmptyResultDataAccessException err){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+        }
     }
 }
