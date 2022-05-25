@@ -30,8 +30,11 @@ message User{
 
 message BlogUser{
   uint32 id = 1;
-  uint32 userId = 2;
-  string description = 3;
+  string firstname = 2;
+  string lastname = 3;
+  string displayName = 4;
+  string imageUrl = 5;
+  string description = 6;
 }
 
 message Location{

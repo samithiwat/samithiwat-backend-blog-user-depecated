@@ -11,6 +11,8 @@ public class User {
 
     @Column(unique = true)
     private Long userId;
+
+    @Column
     private String description;
 
     public User() {}

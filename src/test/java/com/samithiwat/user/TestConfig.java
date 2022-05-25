@@ -11,5 +11,5 @@ import org.springframework.context.annotation.Configuration;
         GrpcServerAutoConfiguration.class, // Create required server beans
         GrpcServerFactoryAutoConfiguration.class, // Select server implementation
         GrpcClientAutoConfiguration.class}) // Support @GrpcClient annotation
-public class ApplicationTestConfig {
+public class TestConfig {
 }
