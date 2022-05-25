@@ -6,6 +6,9 @@ on:
       - dev
       - master
 
+env:
+  SPRING_PROFILES_ACTIVE: ci
+
 jobs:
   docker-build:
     name: 'Docker build and create an image'
