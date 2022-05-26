@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -37,6 +38,9 @@ public class BlogUserServiceTest {
 
     @Spy
     private BlogUserRepository repository;
+
+    @InjectMocks
+    private BlogUserService service;
 
     private List<User> users;
     private Optional<User> user;
@@ -90,8 +94,6 @@ public class BlogUserServiceTest {
         Mockito.doReturn(userDto).when(this.userService).findOne(1l);
         Mockito.doReturn(user).when(this.repository).findById(1l);
 
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
-
         FindOneUserRequest req = FindOneUserRequest.newBuilder()
                 .setId(1)
                 .build();
@@ -119,8 +121,6 @@ public class BlogUserServiceTest {
     public void testFindOneNotFoundInDatabase() throws Exception {
         Mockito.doReturn(Optional.empty()).when(this.repository).findById(1l);
         Mockito.doReturn(userDto).when(this.userService).findOne(1l);
-
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
 
         FindOneUserRequest req = FindOneUserRequest.newBuilder()
                 .setId(1)
@@ -150,8 +150,6 @@ public class BlogUserServiceTest {
         Mockito.doReturn(user).when(this.repository).findById(1l);
         Mockito.doReturn(null).when(this.userService).findOne(1l);
 
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
-
         FindOneUserRequest req = FindOneUserRequest.newBuilder()
                 .setId(1)
                 .build();
@@ -179,8 +177,6 @@ public class BlogUserServiceTest {
     public void testCreateSuccess() throws Exception {
         Mockito.doReturn(this.userDto).when(this.userService).findOne(1l);
         Mockito.doReturn(user.get()).when(this.repository).save(Mockito.any());
-
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
 
         CreateUserRequest req = CreateUserRequest.newBuilder()
                 .setUserId(Math.toIntExact(user.get().getUserId()))
@@ -210,8 +206,6 @@ public class BlogUserServiceTest {
     public void testCreateUserNotFound() throws Exception {
         Mockito.doReturn(null).when(this.userService).findOne(1l);
         Mockito.doReturn(user.get()).when(this.repository).save(user.get());
-
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
 
         UpdateUserRequest req = UpdateUserRequest.newBuilder()
                 .setId(1)
@@ -247,8 +241,6 @@ public class BlogUserServiceTest {
         Mockito.doReturn(user).when(this.repository).findById(1l);
         Mockito.doReturn(user.get()).when(this.repository).save(user.get());
 
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
-
         UpdateUserRequest req = UpdateUserRequest.newBuilder()
                 .setId(1)
                 .setDescription(user.get().getDescription())
@@ -278,8 +270,6 @@ public class BlogUserServiceTest {
         Mockito.doReturn(Optional.ofNullable(null)).when(this.repository).findById(1l);
         Mockito.doReturn(user.get()).when(this.repository).save(user.get());
 
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
-
         UpdateUserRequest req = UpdateUserRequest.newBuilder()
                 .setId(1)
                 .setDescription(user.get().getDescription())
@@ -307,7 +297,6 @@ public class BlogUserServiceTest {
     @Test
     public void testDeleteSuccess() throws Exception {
         Mockito.doNothing().when(this.repository).deleteById(1l);
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
 
         DeleteUserRequest req = DeleteUserRequest.newBuilder()
                 .setId(1)
@@ -335,8 +324,6 @@ public class BlogUserServiceTest {
     @Test
     public void testDeleteNotFound() throws Exception {
         Mockito.doThrow(new EmptyResultDataAccessException("Not found user", 1)).when(this.repository).deleteById(1l);
-
-        BlogUserService service = new BlogUserService(this.repository, this.userService);
 
         DeleteUserRequest req = DeleteUserRequest.newBuilder()
                 .setId(1)

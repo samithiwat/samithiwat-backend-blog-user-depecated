@@ -18,13 +18,6 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
     @Autowired
     private UserServiceImpl userService;
 
-    public BlogUserService() {}
-
-    public BlogUserService(BlogUserRepository blogUserRepository, UserServiceImpl userService) {
-        this.repository = blogUserRepository;
-        this.userService = userService;
-    }
-
     @Override
     public void findOne(FindOneUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
         BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
