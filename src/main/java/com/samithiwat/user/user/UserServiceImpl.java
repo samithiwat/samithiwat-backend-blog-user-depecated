@@ -5,6 +5,7 @@ import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import user.FindOneUserRequest;
+import user.UserResponse;
 import user.UserServiceGrpc;
 
 @Service
@@ -23,12 +24,15 @@ public class UserServiceImpl implements UserService{
         FindOneUserRequest req = FindOneUserRequest.newBuilder()
                 .setId(Math.toIntExact(id))
                 .build();
-        int statusCode = userService.findOne(req).getStatusCode();
+
+        UserResponse res = userService.findOne(req);
+
+        int statusCode = res.getStatusCode();
 
         if(statusCode != HttpStatus.OK.value()){
             return null;
         }
 
-        return userService.findOne(req).getData();
+        return res.getData();
     }
 }
