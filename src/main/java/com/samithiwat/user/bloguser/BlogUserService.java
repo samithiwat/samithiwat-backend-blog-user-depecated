@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @GrpcService
@@ -58,7 +59,6 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
         this.repository.save(user);
 
         for (Post p:posts) {
-            System.out.println(p);
             res.addData(Math.toIntExact(p.getId()));
         }
 
@@ -70,7 +70,29 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void findAllBookmark(FindAllBookmarkRequest request, StreamObserver<BookmarkResponse> responseObserver) {
-        super.findAllBookmark(request, responseObserver);
+        BookmarkResponse.Builder res = BookmarkResponse.newBuilder();
+
+        User user = this.repository.findById((long) request.getUserId()).orElse(null);
+
+        if(user == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        List<Post> posts = user.getBookmarks();
+
+        for (Post p:posts) {
+            res.addData(Math.toIntExact(p.getId()));
+        }
+
+        res.setStatusCode(HttpStatus.OK.value());
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
     }
 
     @Override
