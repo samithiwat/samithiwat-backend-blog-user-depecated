@@ -3,6 +3,10 @@ package com.samithiwat.user.bloguser;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
+import com.samithiwat.user.post.PostService;
+import com.samithiwat.user.post.PostServiceImpl;
+import com.samithiwat.user.post.entity.Post;
+import com.samithiwat.user.user.UserService;
 import com.samithiwat.user.user.UserServiceImpl;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -10,13 +14,74 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+
 @GrpcService
 public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase {
     @Autowired
     private BlogUserRepository repository;
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserService userService;
+
+    @Autowired
+    private PostService postService;
+
+    public BlogUserService(){}
+
+    public BlogUserService(BlogUserRepository repository, UserService userService, PostService postService){
+        this.repository = repository;
+        this.userService = userService;
+        this.postService = postService;
+    }
+
+    @Override
+    public void addBookmark(AddBookmarkRequest request, StreamObserver<BookmarkResponse> responseObserver) {
+        BookmarkResponse.Builder res = BookmarkResponse.newBuilder();
+
+        User user = this.repository.findById((long) request.getUserId()).orElse(null);
+
+        if(user == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        List<Post> posts = user.getBookmarks();
+        Post post = this.postService.findOneOrCreate((long) request.getPostId());
+
+        posts.add(post);
+
+        this.repository.save(user);
+
+        for (Post p:posts) {
+            System.out.println(p);
+            res.addData(Math.toIntExact(p.getId()));
+        }
+
+        res.setStatusCode(HttpStatus.OK.value());
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
+    }
+
+    @Override
+    public void findAllBookmark(FindAllBookmarkRequest request, StreamObserver<BookmarkResponse> responseObserver) {
+        super.findAllBookmark(request, responseObserver);
+    }
+
+    @Override
+    public void deleteBookmark(DeleteBookmarkRequest request, StreamObserver<BookmarkResponse> responseObserver) {
+        super.deleteBookmark(request, responseObserver);
+    }
+
+    @Override
+    public void read(ReadRequest request, StreamObserver<ReadResponse> responseObserver) {
+        super.read(request, responseObserver);
+    }
 
     @Override
     public void findOne(FindOneUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {

@@ -5,6 +5,8 @@ import com.samithiwat.user.TestConfig;
 import com.samithiwat.user.bloguser.entity.User;
 import com.samithiwat.user.grpc.bloguser.*;
 import com.samithiwat.user.grpc.dto.BlogUser;
+import com.samithiwat.user.post.PostService;
+import com.samithiwat.user.post.entity.Post;
 import com.samithiwat.user.user.UserServiceImpl;
 import io.grpc.internal.testing.StreamRecorder;
 import org.junit.jupiter.api.Assertions;
@@ -37,36 +39,45 @@ public class BlogUserServiceTest {
     private UserServiceImpl userService;
 
     @Spy
+    private PostService postService;
+
+    @Spy
     private BlogUserRepository repository;
 
     @InjectMocks
     private BlogUserService service;
 
-    private List<User> users;
     private Optional<User> user;
     private com.samithiwat.user.grpc.dto.User userDto;
     private BlogUser blogUserDto;
-    private Faker faker;
+    private Post post;
 
     @BeforeEach
     void setup(){
-        this.faker = new Faker();
+        Faker faker = new Faker();
 
-        this.users = new ArrayList<User>();
+        List<Post> posts = new ArrayList<Post>();
+        Post post1 = new Post(1L);
+        post1.setId(1L);
+
+        Post post2 = new Post(2L);
+        post2.setId(2L);
+
+        Post post3 = new Post(3L);
+        post3.setId(3L);
+
+        posts.add(post1);
+        posts.add(post2);
+        posts.add(post3);
+
+        this.post = new Post(1L);
+        this.post.setId(1L);
+
         this.user = Optional.of(new User());
         this.user.get().setId(1l);
         this.user.get().setDescription(faker.lorem().sentence());
         this.user.get().setUserId(1l);
-
-        User user2 = new User();
-        user2.setId(2l);
-        user2.setDescription(faker.lorem().sentence());
-        user2.setUserId(2l);
-
-        User user3 = new User();
-        user3.setId(3l);
-        user3.setDescription(faker.lorem().sentence());
-        user3.setUserId(3l);
+        this.user.get().setBookmarks(posts);
 
         this.userDto = com.samithiwat.user.grpc.dto.User.newBuilder()
                 .setId(1)
@@ -83,10 +94,6 @@ public class BlogUserServiceTest {
                 .setImageUrl(this.userDto.getImageUrl())
                 .setDescription(this.user.get().getDescription())
                 .build();
-
-        this.users.add(user.get());
-        this.users.add(user2);
-        this.users.add(user3);
     }
 
     @Test
@@ -346,5 +353,111 @@ public class BlogUserServiceTest {
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
         Assertions.assertEquals(1, result.getErrorsCount());
         Assertions.assertEquals(BlogUser.newBuilder().build(), result.getData());
+    }
+
+    @Test
+    public void testAddBookmarkFounded() throws Exception{
+        List<Integer> want = new ArrayList<Integer>();
+        want.add(1);
+        want.add(2);
+        want.add(3);
+        want.add(4);
+
+        this.post.setId(4L);
+
+        Mockito.doReturn(this.user).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(4L);
+
+        AddBookmarkRequest req = AddBookmarkRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(4)
+                .build();
+
+        StreamRecorder<BookmarkResponse> res = StreamRecorder.create();
+
+        service.addBookmark(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BookmarkResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BookmarkResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.OK.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertEquals(want, result.getDataList());
+    }
+
+    @Test
+    public void testAddBookmarkNotFound() throws Exception{
+        List<Integer> want = new ArrayList<Integer>();
+        want.add(1);
+        want.add(2);
+        want.add(3);
+        want.add(4);
+
+        this.post.setId(4L);
+
+        Mockito.doReturn(this.user).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(4L);
+
+        AddBookmarkRequest req = AddBookmarkRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(4)
+                .build();
+
+        StreamRecorder<BookmarkResponse> res = StreamRecorder.create();
+
+        service.addBookmark(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BookmarkResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BookmarkResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.OK.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertEquals(want, result.getDataList());
+    }
+
+    @Test
+    public void testAddBookmarkNotFoundUser() throws Exception{
+        Mockito.doReturn(Optional.empty()).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(1L);
+
+        AddBookmarkRequest req = AddBookmarkRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(1)
+                .build();
+
+        StreamRecorder<BookmarkResponse> res = StreamRecorder.create();
+
+        service.addBookmark(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BookmarkResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BookmarkResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
+        Assertions.assertEquals(1, result.getErrorsCount());
+        Assertions.assertEquals(new ArrayList<Integer>(), result.getDataList());
     }
 }
