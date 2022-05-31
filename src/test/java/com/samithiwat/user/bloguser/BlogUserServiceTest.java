@@ -519,4 +519,64 @@ public class BlogUserServiceTest {
         Assertions.assertEquals(1, result.getErrorsCount());
         Assertions.assertEquals(new ArrayList<Integer>(), result.getDataList());
     }
+
+    @Test
+    public void testDeleteBookmarkSuccess() throws Exception{
+        List<Integer> want = new ArrayList<Integer>();
+        want.add(1);
+        want.add(2);
+
+        Mockito.doReturn(this.user).when(this.repository).findById(1L);
+
+        DeleteBookmarkRequest req = DeleteBookmarkRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(3)
+                .build();
+
+        StreamRecorder<BookmarkResponse> res = StreamRecorder.create();
+
+        service.deleteBookmark(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BookmarkResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BookmarkResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.OK.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertEquals(want, result.getDataList());
+    }
+
+    @Test
+    public void testDeleteBookmarkUserNotFound() throws Exception{
+        Mockito.doReturn(Optional.empty()).when(this.repository).findById(1L);
+
+        DeleteBookmarkRequest req = DeleteBookmarkRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(3)
+                .build();
+
+        StreamRecorder<BookmarkResponse> res = StreamRecorder.create();
+
+        service.deleteBookmark(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<BookmarkResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        BookmarkResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
+        Assertions.assertEquals(1, result.getErrorsCount());
+        Assertions.assertEquals(new ArrayList<Integer>(), result.getDataList());
+    }
 }

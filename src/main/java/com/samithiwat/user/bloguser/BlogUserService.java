@@ -97,7 +97,37 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void deleteBookmark(DeleteBookmarkRequest request, StreamObserver<BookmarkResponse> responseObserver) {
-        super.deleteBookmark(request, responseObserver);
+        BookmarkResponse.Builder res = BookmarkResponse.newBuilder();
+
+        User user = this.repository.findById((long) request.getUserId()).orElse(null);
+
+        if(user == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user");
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        List<Post> posts = user.getBookmarks();
+        for (int i = 0; i < posts.size(); i++) {
+            if(posts.get(i).getPostId() == request.getPostId()){
+                posts.remove(i);
+                break;
+            }
+        }
+
+        this.repository.save(user);
+
+        for (Post p:posts) {
+            res.addData(Math.toIntExact(p.getId()));
+        }
+
+        res.setStatusCode(HttpStatus.OK.value());
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
     }
 
     @Override
