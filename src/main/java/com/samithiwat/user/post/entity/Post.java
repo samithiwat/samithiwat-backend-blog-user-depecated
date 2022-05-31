@@ -36,7 +36,9 @@ public class Post {
 
     public Post(){}
 
-    public Post(Long postId){}
+    public Post(Long postId){
+        setPostId(postId);
+    }
 
     public List<User> getUserBookmarks() {
         return userBookmarks;
