@@ -1,5 +1,6 @@
 package com.samithiwat.user.bloguser.entity;
 
+import com.samithiwat.user.post.entity.Post;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -7,6 +8,7 @@ import org.hibernate.annotations.Where;
 
 import javax.persistence.*;
 import java.time.Instant;
+import java.util.List;
 
 @Entity
 @SQLDelete(sql = "UPDATE user SET deletedDate = CURRENT_DATE WHERE id = ?")
@@ -16,6 +18,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "user_post_bookmark",
+        joinColumns = @JoinColumn(name="user_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name="post_id", referencedColumnName = "id")
+    )
+    private List<Post> bookmarks;
 
     @Column(unique = true)
     private Long userId;
@@ -33,6 +42,14 @@ public class User {
     private Instant deletedDate;
 
     public User() {}
+
+    public List<Post> getBookmarks() {
+        return bookmarks;
+    }
+
+    public void setBookmarks(List<Post> bookmarks) {
+        this.bookmarks = bookmarks;
+    }
 
     public Long getId() {
         return id;
