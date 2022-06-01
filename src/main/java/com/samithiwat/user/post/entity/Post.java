@@ -22,6 +22,9 @@ public class Post {
     @ManyToMany(mappedBy = "bookmarks")
     private List<User> userBookmarks;
 
+    @ManyToMany(mappedBy = "reads")
+    private List<User> userReads;
+
     @Column(unique = true)
     private Long postId;
 

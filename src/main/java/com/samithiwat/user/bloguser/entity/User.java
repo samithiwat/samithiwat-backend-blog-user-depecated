@@ -26,6 +26,13 @@ public class User {
     )
     private List<Post> bookmarks;
 
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "user_post_read",
+        joinColumns = @JoinColumn(name="user_id", referencedColumnName = "id"),
+        inverseJoinColumns = @JoinColumn(name="post_id",referencedColumnName = "id")
+    )
+    private List<Post> reads;
+
     @Column(unique = true)
     private Long userId;
 
@@ -42,6 +49,14 @@ public class User {
     private Instant deletedDate;
 
     public User() {}
+
+    public List<Post> getReads() {
+        return reads;
+    }
+
+    public void setReads(List<Post> reads) {
+        this.reads = reads;
+    }
 
     public List<Post> getBookmarks() {
         return bookmarks;
