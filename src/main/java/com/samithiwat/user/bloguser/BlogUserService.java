@@ -132,14 +132,38 @@ public class BlogUserService extends BlogUserServiceGrpc.BlogUserServiceImplBase
 
     @Override
     public void read(ReadRequest request, StreamObserver<ReadResponse> responseObserver) {
-        super.read(request, responseObserver);
+        ReadResponse.Builder res = ReadResponse.newBuilder();
+
+        User user = this.repository.findById((long) request.getUserId()).orElse(null);
+
+        if(user == null){
+            res.setStatusCode(HttpStatus.NOT_FOUND.value())
+                    .addErrors("Not found user")
+                    .setData(false);
+
+            responseObserver.onNext(res.build());
+            responseObserver.onCompleted();
+            return;
+        }
+
+        Post post = this.postService.findOneOrCreate((long) request.getPostId());
+        List<Post> posts = user.getReads();
+
+        posts.add(post);
+
+        this.repository.save(user);
+
+        res.setStatusCode(HttpStatus.OK.value()).setData(true);
+
+        responseObserver.onNext(res.build());
+        responseObserver.onCompleted();
     }
 
     @Override
     public void findOne(FindOneUserRequest request, StreamObserver<BlogUserResponse> responseObserver) {
         BlogUserResponse.Builder res = BlogUserResponse.newBuilder();
 
-        User user = this.repository.findById(Long.valueOf(request.getId())).orElse(null);
+        User user = this.repository.findById((long) request.getId()).orElse(null);
         if(user == null){
             res.setStatusCode(HttpStatus.NOT_FOUND.value())
                     .addErrors("Not found user");
