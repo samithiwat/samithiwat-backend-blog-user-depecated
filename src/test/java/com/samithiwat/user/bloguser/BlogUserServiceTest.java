@@ -78,6 +78,7 @@ public class BlogUserServiceTest {
         this.user.get().setDescription(faker.lorem().sentence());
         this.user.get().setUserId(1l);
         this.user.get().setBookmarks(posts);
+        this.user.get().setReads(posts);
 
         this.userDto = com.samithiwat.user.grpc.dto.User.newBuilder()
                 .setId(1)
@@ -578,5 +579,95 @@ public class BlogUserServiceTest {
         Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
         Assertions.assertEquals(1, result.getErrorsCount());
         Assertions.assertEquals(new ArrayList<Integer>(), result.getDataList());
+    }
+
+    @Test
+    public void testReadPostSuccess() throws Exception{
+        Mockito.doReturn(this.user).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(3L);
+
+        ReadRequest req = ReadRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(3)
+                .build();
+
+        StreamRecorder<ReadResponse> res = StreamRecorder.create();
+
+        service.read(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<ReadResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        ReadResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.OK.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertTrue(result.getData());
+    }
+
+    @Test
+    public void testReadPostNotFoundUser() throws Exception{
+        Mockito.doReturn(Optional.empty()).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(3L);
+
+        ReadRequest req = ReadRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(3)
+                .build();
+
+        StreamRecorder<ReadResponse> res = StreamRecorder.create();
+
+        service.read(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<ReadResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        ReadResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND.value(), result.getStatusCode());
+        Assertions.assertEquals(1, result.getErrorsCount());
+        Assertions.assertFalse(result.getData());
+    }
+
+    @Test
+    public void testReadPostNotFoundPost() throws Exception{
+        Mockito.doReturn(this.user).when(this.repository).findById(1L);
+        Mockito.doReturn(this.user.get()).when(this.repository).save(Mockito.any());
+        Mockito.doReturn(this.post).when(this.postService).findOneOrCreate(3L);
+
+        ReadRequest req = ReadRequest.newBuilder()
+                .setUserId(1)
+                .setPostId(3)
+                .build();
+
+        StreamRecorder<ReadResponse> res = StreamRecorder.create();
+
+        service.read(req, res);
+
+        if (!res.awaitCompletion(5, TimeUnit.SECONDS)){
+            Assertions.fail();
+        }
+
+        List<ReadResponse> results = res.getValues();
+
+        Assertions.assertEquals(1, results.size());
+
+        ReadResponse result = results.get(0);
+
+        Assertions.assertEquals(HttpStatus.OK.value(), result.getStatusCode());
+        Assertions.assertEquals(0, result.getErrorsCount());
+        Assertions.assertTrue(result.getData());
     }
 }
