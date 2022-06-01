@@ -53,7 +53,7 @@ class PostServiceImplTest {
     }
 
     @Test
-    public void testFIndOneOrCreateNotFound(){
+    public void testFindOneOrCreateNotFound(){
         Mockito.doReturn(Optional.empty()).when(this.repository).findOneByPostId(1L);
         Mockito.doReturn(this.post.get()).when(this.repository).save(Mockito.any());
 
